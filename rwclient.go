@@ -58,7 +58,6 @@ func NewRWClient(rwKey string) *RWClient {
 		rwKey: rwKey,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
-			Transport: &loggingTransport{},
 		},
 		baseURL: "https://rw.vestaboard.com",
 	}
