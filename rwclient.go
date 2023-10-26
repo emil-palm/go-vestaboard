@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 )
@@ -35,11 +36,29 @@ type RWClient struct {
 	baseURL    string
 }
 
+type loggingTransport struct{}
+
+func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
+	bytes, _ := httputil.DumpRequestOut(r, true)
+
+	resp, err := http.DefaultTransport.RoundTrip(r)
+	// err is returned after dumping the response
+
+	respBytes, _ := httputil.DumpResponse(resp, true)
+	bytes = append(bytes, respBytes...)
+
+	fmt.Printf("%s\n", bytes)
+
+	return resp, err
+}
+
+
 func NewRWClient(rwKey string) *RWClient {
 	return &RWClient{
 		rwKey: rwKey,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
+			Transport: &loggingTransport{},
 		},
 		baseURL: "https://rw.vestaboard.com",
 	}
@@ -87,8 +106,10 @@ func (c *RWClient) SendMessage(ctx context.Context, l Layout) (*MessageResponse,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "text/plain")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(RWApiKeyHeader, c.rwKey)
+
 
 	var response RWMessageResponse
 	resp, err := c.do(req, &response)
