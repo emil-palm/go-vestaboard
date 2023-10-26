@@ -61,8 +61,8 @@ func (c *RWClient) do(req *http.Request, out interface{}) (*http.Response, error
 	}
 
 	ct := resp.Header.Get("Content-Type")
-	if !strings.HasPrefix(ct, "text/plain") {
-		return nil, fmt.Errorf("%s: response content-type is not text/plain (got %s): body: %s",
+	if !strings.HasPrefix(ct, "text/plain") && !strings.HasPrefix(ct, "application/json") {
+		return nil, fmt.Errorf("%s: response content-type is not text/plain or application/json (got %s): body: %s",
 			errPrefix, ct, body)
 	}
 
@@ -105,4 +105,47 @@ func (c *RWClient) SendMessage(ctx context.Context, l Layout) (*MessageResponse,
 	}}
 
 	return &mr, nil
+}
+
+func (c *RWClient) SendText(ctx context.Context, text string) (*MessageResponse, error) {
+
+        text = strings.ToUpper(text)
+        if err := ValidText(text, true); err != nil {
+                return nil, fmt.Errorf("invalid message: %w", err)
+        }
+
+        var b bytes.Buffer
+        body := &TextMessage{
+                Text: text,
+        }
+
+        if err := json.NewEncoder(&b).Encode(body); err != nil {
+                return nil, fmt.Errorf("failed to encode JSON: %w", err)
+        }
+
+        req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, &b)
+        if err != nil {
+                return nil, err
+        }
+        req.Header.Set("Accept", "text/plain")
+        req.Header.Set("Content-Type", "application/json")
+
+        req.Header.Set(RWApiKeyHeader, c.rwKey)
+
+
+        var response RWMessageResponse
+        resp, err := c.do(req, &response)
+        if err != nil {
+                return nil, err
+        }
+
+        if resp.StatusCode != http.StatusOK {
+                return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+        }
+
+        mr := MessageResponse{Message: Message{
+                Text: response.Message,
+        }}
+
+        return &mr, nil
 }
