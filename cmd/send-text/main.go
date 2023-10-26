@@ -35,9 +35,9 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := vestaboard.New(c.APIKey, c.Secret)
+	client := vestaboard.NewRWClient(c.Secret)
 
-	subs, err := client.Subscriptions(ctx)
+/*	subs, err := client.Subscriptions(ctx)
 	if err != nil {
 		log.Fatalf("error calling Viewer: %v", err)
 	}
@@ -46,7 +46,10 @@ func main() {
 	msg, err := client.SendText(ctx, subs.Subscriptions[0].ID, *textFlag)
 	if err != nil {
 		log.Fatalf("error sending message: %v", err)
+	}*/
+	msg, err := client.SendText(ctx, *textFlag)
+	if err != nil {
+		log.Fatalf("error sending message: %v", err)
 	}
-
 	log.Printf("result: %+v", msg)
 }
