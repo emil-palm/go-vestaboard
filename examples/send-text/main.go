@@ -37,7 +37,7 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	board := client.NewReadWriteBoard("example", c.Secret)
+	board := client.NewBoard("example", c.Secret)
 
 	client := client.New()
 RESEND:

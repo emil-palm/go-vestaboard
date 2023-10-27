@@ -9,23 +9,23 @@ const (
 	rwapikeyheader = "X-Vestaboard-Read-Write-Key"
 )
 
-type ReadWriteBoard struct {
+type Board struct {
 	token string
 	name  string
 }
 
-func NewReadWriteBoard(name, token string) *ReadWriteBoard {
-	return &ReadWriteBoard{
+func NewBoard(name, token string) *Board {
+	return &Board{
 		token: token,
 		name:  name,
 	}
 }
 
-func (rw *ReadWriteBoard) Apply(req *http.Request) error {
+func (rw *Board) Apply(req *http.Request) error {
 	req.Header.Set(rwapikeyheader, rw.token)
 	return nil
 }
 
-func (rw *ReadWriteBoard) String() string {
+func (rw *Board) String() string {
 	return fmt.Sprintf("[ReadWrite] %s", rw.name)
 }
