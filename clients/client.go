@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"log"
 
 	"github.com/motemen/go-loghttp"
 
 	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
-
-type Response struct {
-}
 
 type Board interface {
 	Apply(*http.Request) error
@@ -27,23 +25,36 @@ type ClientImplementation interface {
 }
 
 type Client struct {
-	httpClient *http.Client
+	HTTPClient *http.Client
 	impl       ClientImplementation
 }
 
 func NewClient(impl ClientImplementation) (*Client, error) {
 	client := Client{
-		httpClient: &http.Client{
+		HTTPClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
 		impl: impl,
 	}
 
 	if os.Getenv("VBHTTPDEBUG") == "1" {
-		client.httpClient.Transport = &loghttp.Transport{}
+		client.HTTPClient.Transport = &loghttp.Transport{}
 	}
 
 	return &client, nil
+}
+
+func (c *Client) do(req *http.Request) (*Response, error) {
+
+	httpResponse, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("%+v", httpResponse)
+	resp, err := c.impl.ParseResponse(httpResponse)
+
+	return resp, err
 }
 
 func (c *Client) SendMessage(ctx context.Context, b Board, m layout.Layout) (*Response, error) {
@@ -51,17 +62,13 @@ func (c *Client) SendMessage(ctx context.Context, b Board, m layout.Layout) (*Re
 	if err != nil {
 		return nil, err
 	}
+	return c.do(req)
+}
 
-	httpResponse, err := c.httpClient.Do(req)
+func (c *Client) SendText(ctx context.Context, b Board, t string) (*Response, error) {
+	req, err := c.impl.SendText(ctx, b, t)
 	if err != nil {
 		return nil, err
 	}
-
-	resp, err := c.impl.ParseResponse(httpResponse)
-
-	return resp, nil
-}
-
-func (c *Client) SendText(ctx context.Context, b Board, t string) (Response, error) {
-	return Response{}, nil
+	return c.do(req)
 }
