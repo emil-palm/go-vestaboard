@@ -28,6 +28,7 @@ import (
 
 const (
 	RWApiKeyHeader = "X-Vestaboard-Read-Write-Key"
+	MaxBodySize    = 2_000_000
 )
 
 type RWClient struct {
@@ -51,7 +52,6 @@ func (s *loggingTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 
 	return resp, err
 }
-
 
 func NewRWClient(rwKey string) *RWClient {
 	return &RWClient{
@@ -109,7 +109,6 @@ func (c *RWClient) SendMessage(ctx context.Context, l Layout) (*MessageResponse,
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set(RWApiKeyHeader, c.rwKey)
 
-
 	var response RWMessageResponse
 	resp, err := c.do(req, &response)
 	if err != nil {
@@ -129,43 +128,42 @@ func (c *RWClient) SendMessage(ctx context.Context, l Layout) (*MessageResponse,
 
 func (c *RWClient) SendText(ctx context.Context, text string) (*MessageResponse, error) {
 
-        text = strings.ToUpper(text)
-        if err := ValidText(text, true); err != nil {
-                return nil, fmt.Errorf("invalid message: %w", err)
-        }
+	text = strings.ToUpper(text)
+	if err := ValidText(text, true); err != nil {
+		return nil, fmt.Errorf("invalid message: %w", err)
+	}
 
-        var b bytes.Buffer
-        body := &TextMessage{
-                Text: text,
-        }
+	var b bytes.Buffer
+	body := &TextMessage{
+		Text: text,
+	}
 
-        if err := json.NewEncoder(&b).Encode(body); err != nil {
-                return nil, fmt.Errorf("failed to encode JSON: %w", err)
-        }
+	if err := json.NewEncoder(&b).Encode(body); err != nil {
+		return nil, fmt.Errorf("failed to encode JSON: %w", err)
+	}
 
-        req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, &b)
-        if err != nil {
-                return nil, err
-        }
-        req.Header.Set("Accept", "text/plain")
-        req.Header.Set("Content-Type", "application/json")
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, &b)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "text/plain")
+	req.Header.Set("Content-Type", "application/json")
 
-        req.Header.Set(RWApiKeyHeader, c.rwKey)
+	req.Header.Set(RWApiKeyHeader, c.rwKey)
 
+	var response RWMessageResponse
+	resp, err := c.do(req, &response)
+	if err != nil {
+		return nil, err
+	}
 
-        var response RWMessageResponse
-        resp, err := c.do(req, &response)
-        if err != nil {
-                return nil, err
-        }
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
 
-        if resp.StatusCode != http.StatusOK {
-                return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-        }
+	mr := MessageResponse{Message: Message{
+		Text: response.Message,
+	}}
 
-        mr := MessageResponse{Message: Message{
-                Text: response.Message,
-        }}
-
-        return &mr, nil
+	return &mr, nil
 }
