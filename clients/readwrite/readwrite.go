@@ -38,11 +38,11 @@ type Client struct {
 	client  *http.Client
 }
 
-func NewClient() *Client {
-	return NewClientWithHTTPClient(clients.NewHTTPClient())
+func New() *Client {
+	return NewWithHTTPClient(clients.NewHTTPClient())
 }
 
-func NewClientWithHTTPClient(client *http.Client) *Client {
+func NewWithHTTPClient(client *http.Client) *Client {
 	return &Client{
 		baseURL: "https://rw.vestaboard.com",
 		client:  client,

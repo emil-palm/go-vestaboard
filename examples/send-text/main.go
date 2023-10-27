@@ -19,6 +19,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"time"
 
 	client "github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
 	"github.com/mikehelmick/go-vestaboard/v2/internal/config"
@@ -38,12 +39,13 @@ func main() {
 
 	board := client.NewReadWriteBoard("example", c.Secret)
 
-	client := client.NewClient()
+	client := client.New()
 RESEND:
 	resp, err := client.SendText(ctx, board, *textFlag)
 
 	if err != nil {
 		if resp.HTTPResponseCode == http.StatusServiceUnavailable {
+			time.Sleep(time.Second * 10)
 			goto RESEND
 		}
 		if resp.HTTPResponseCode == http.StatusNotModified {
