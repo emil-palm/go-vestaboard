@@ -15,6 +15,7 @@
 package installables
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,14 +39,31 @@ type Client struct {
 }
 
 func New(apiKey, apiSecret string) *Client {
+	return NewWithHTTPClient(&http.Client{
+		Timeout: 5 * time.Second,
+	}, apiKey, apiSecret)
+}
+
+func NewWithHTTPClient(httpClient *http.Client, apiKey, apiSecret string) *Client {
 	return &Client{
-		apiKey:    apiKey,
-		apiSecret: apiSecret,
-		httpClient: &http.Client{
-			Timeout: 5 * time.Second,
-		},
-		baseURL: "https://platform.vestaboard.com",
+		apiKey:     apiKey,
+		apiSecret:  apiSecret,
+		httpClient: httpClient,
+		baseURL:    "https://platform.vestaboard.com",
 	}
+}
+
+func (c *Client) NewRequestWithContext(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set(APIKeyHeader, c.apiKey)
+	req.Header.Set(APIKeySecret, c.apiSecret)
+
+	return req
 }
 
 func (c *Client) do(req *http.Request, out interface{}) (*http.Response, error) {

@@ -5,33 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/mikehelmick/go-vestaboard/v2/clients"
 	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 
-type UnixTime struct {
-	time.Time
-}
-
-func (u *UnixTime) UnmarshalJSON(b []byte) error {
-	var timestamp int64
-	err := json.Unmarshal(b, &timestamp)
-	if err != nil {
-		return err
-	}
-	u.Time = time.Unix(timestamp, 0)
-	return nil
-}
-
-type messageResponse struct {
-	Status  string `json:"status"`
-	ID      string `json:"id"`
-	Created UnixTime
-}
+const MaxBodySize = 2_000_000
 
 type Client struct {
 	baseURL string
@@ -49,7 +31,7 @@ func NewWithHTTPClient(client *http.Client) *Client {
 	}
 }
 
-func (c *Client) do(req *http.Request) (*clients.Response, error) {
+func (c *Client) do(req *http.Request) (*Response, error) {
 	httpResponse, err := c.client.Do(req)
 
 	if err != nil {
@@ -60,7 +42,7 @@ func (c *Client) do(req *http.Request) (*clients.Response, error) {
 	return resp, err
 }
 
-func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout layout.Layout) (*clients.Response, error) {
+func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout layout.Layout) (*Response, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(layout); err != nil {
 		return nil, fmt.Errorf("failed to encode JSON: %w", err)
@@ -81,7 +63,7 @@ func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout la
 	return c.do(req)
 }
 
-func (c *Client) SendText(ctx context.Context, board clients.Board, text string) (*clients.Response, error) {
+func (c *Client) SendText(ctx context.Context, board clients.Board, text string) (*Response, error) {
 	text = strings.ToUpper(text)
 	if err := layout.ValidText(text, true); err != nil {
 		return nil, fmt.Errorf("invalid message: %w", err)
@@ -111,23 +93,29 @@ func (c *Client) SendText(ctx context.Context, board clients.Board, text string)
 	return c.do(req)
 }
 
-func (c *Client) parseResponse(httpResp *http.Response) (*clients.Response, error) {
-	resp, err := clients.NewResponse(*httpResp)
+func (c *Client) parseResponse(httpResp *http.Response) (*Response, error) {
+	resp := clients.NewResponse(*httpResp)
+	parsedResponse := Response{
+		"",
+		"",
+		UnixTime{},
+		*resp,
+	}
+
+	data := io.LimitReader(httpResp.Body, MaxBodySize)
+	body, err := io.ReadAll(data)
+
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
-	var parsedResponse messageResponse
-
-	if err := json.Unmarshal(resp.Data, &parsedResponse); err != nil {
-		return resp, err
+	if err := json.Unmarshal(body, &parsedResponse); err != nil {
+		return &parsedResponse, err
 	}
 
-	resp.ResponseMessage = parsedResponse
-
-	if resp.HTTPResponseCode != http.StatusOK {
-		return resp, fmt.Errorf("unexpected status code: %d", resp.HTTPResponseCode)
+	if resp.HTTPResponseStatusCode != http.StatusOK {
+		return &parsedResponse, fmt.Errorf("unexpected status code: %d", resp.HTTPResponseStatusCode)
 	}
 
-	return resp, nil
+	return &parsedResponse, nil
 }

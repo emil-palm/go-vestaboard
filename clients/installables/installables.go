@@ -13,12 +13,3 @@
 // limitations under the License.package installables
 
 package installables
-
-type Installable struct {
-	ID string `json:"_id"`
-}
-
-type Installation struct {
-	ID          string `json:"_id"`
-	Installable `json:"installable"`
-}

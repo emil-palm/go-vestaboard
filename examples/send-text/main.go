@@ -44,11 +44,11 @@ RESEND:
 	resp, err := client.SendText(ctx, board, *textFlag)
 
 	if err != nil {
-		if resp.HTTPResponseCode == http.StatusServiceUnavailable {
+		if resp.HTTPResponseStatusCode == http.StatusServiceUnavailable {
 			time.Sleep(time.Second * 10)
 			goto RESEND
 		}
-		if resp.HTTPResponseCode == http.StatusNotModified {
+		if resp.HTTPResponseStatusCode == http.StatusNotModified {
 			log.Print("Board is already that")
 		}
 	} else {

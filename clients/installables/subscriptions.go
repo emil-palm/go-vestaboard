@@ -21,6 +21,19 @@ import (
 
 const subscriptionsPath = "/subscriptions"
 
+type Board struct {
+	ID string `json:"_id"`
+}
+
+type Installable struct {
+	ID string `json:"_id"`
+}
+
+type Installation struct {
+	ID          string `json:"_id"`
+	Installable `json:"installable"`
+}
+
 type Subscription struct {
 	ID           string `json:"_id"`
 	Created      string `json:"_created"`
@@ -28,21 +41,19 @@ type Subscription struct {
 	Boards       []Board `json:"boards"`
 }
 
-type SubscriptionsResponse struct {
-	Subscriptions []Subscription `json:"subscriptions"`
-}
-
-func (c *Client) Subscriptions(ctx context.Context) (*SubscriptionsResponse, error) {
+func (c *Client) Subscriptions(ctx context.Context) ([]Subscription, error) {
 	url := c.baseURL + subscriptionsPath
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
+	req, err := c.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set(APIKeyHeader, c.apiKey)
-	req.Header.Set(APIKeySecret, c.apiSecret)
 
-	var response SubscriptionsResponse
+	var response struct {
+		Subscriptions []Subscription `json:"subscriptions"`
+	}
+
 	_, err = c.do(req, &response)
 	if err != nil {
 		return nil, err
