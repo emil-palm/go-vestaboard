@@ -1,4 +1,4 @@
-module github.com/mikehelmick/go-vestaboard
+module github.com/mikehelmick/go-vestaboard/v2
 
 go 1.16
 
