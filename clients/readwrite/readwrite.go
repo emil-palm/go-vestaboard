@@ -1,6 +1,7 @@
 package readwrite
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -8,7 +9,11 @@ import (
 	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 
-type ReadWriteClient struct {
+type Client struct {
+}
+
+func NewClient() *Client {
+	return &Client{}
 }
 
 type ReadWriteBoard struct {
@@ -31,10 +36,13 @@ func (rw *ReadWriteBoard) String() string {
 	return fmt.Sprintf("[ReadWrite] %s", rw.name)
 }
 
-func (rw *ReadWriteClient) SendMessage(board clients.Board, layout layout.Layout) {
-
+func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout layout.Layout) (*http.Request, error) {
+	return nil, nil
 }
 
-func (rw *ReadWriteClient) SendText(board clients.Board, text string) {
-
+func (c *Client) SendText(ctx context.Context, board clients.Board, text string) (*http.Request, error) {
+	return nil, nil
+}
+func (c *Client) ParseResponse(*http.Response) (*clients.Response, error) {
+	return nil, nil
 }

@@ -21,7 +21,7 @@ import (
 )
 
 type Config struct {
-	APIKey string `env:"APIKEY,required"`
+	APIKey string `env:"APIKEY"`
 	Secret string `env:"SECRET,required"`
 }
 

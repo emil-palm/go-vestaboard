@@ -19,8 +19,9 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard"
-	"github.com/mikehelmick/go-vestaboard/internal/config"
+	"github.com/mikehelmick/go-vestaboard/v2/clients"
+	"github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
+	"github.com/mikehelmick/go-vestaboard/v2/internal/config"
 )
 
 var textFlag = flag.String("text", "HELLO, WORLD!", "text to send")
@@ -35,21 +36,13 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := vestaboard.NewRWClient(c.Secret)
+	board := readwrite.NewReadWriteBoard("example", c.Secret)
 
-/*	subs, err := client.Subscriptions(ctx)
-	if err != nil {
-		log.Fatalf("error calling Viewer: %v", err)
-	}
-	log.Printf("result: %+v", subs)
+	client, err := clients.NewClient(readwrite.NewClient())
+	resp, err := client.SendText(ctx, board, *textFlag)
 
-	msg, err := client.SendText(ctx, subs.Subscriptions[0].ID, *textFlag)
-	if err != nil {
-		log.Fatalf("error sending message: %v", err)
-	}*/
-	msg, err := client.SendText(ctx, *textFlag)
 	if err != nil {
 		log.Fatalf("error sending message: %v", err)
 	}
-	log.Printf("result: %+v", msg)
+	log.Printf("result: %+v", resp)
 }
