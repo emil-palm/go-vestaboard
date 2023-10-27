@@ -18,9 +18,9 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net/http"
 
-	"github.com/mikehelmick/go-vestaboard/v2/clients"
-	"github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
+	client "github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
 	"github.com/mikehelmick/go-vestaboard/v2/internal/config"
 )
 
@@ -36,13 +36,20 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	board := readwrite.NewReadWriteBoard("example", c.Secret)
+	board := client.NewReadWriteBoard("example", c.Secret)
 
-	client, err := clients.NewClient(readwrite.NewClient())
+	client := client.NewClient()
+RESEND:
 	resp, err := client.SendText(ctx, board, *textFlag)
 
 	if err != nil {
-		log.Fatalf("error sending message: %v", err)
+		if resp.HTTPResponseCode == http.StatusServiceUnavailable {
+			goto RESEND
+		}
+		if resp.HTTPResponseCode == http.StatusNotModified {
+			log.Print("Board is already that")
+		}
+	} else {
+		log.Printf("result: %+v", resp)
 	}
-	log.Printf("result: %+v", resp)
 }

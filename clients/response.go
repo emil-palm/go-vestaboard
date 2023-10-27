@@ -1,15 +1,15 @@
 package clients
 
 import (
-	"net/http"
 	"io"
+	"net/http"
 )
 
 const MaxBodySize = 2_000_000
 
 type Response struct {
 	HTTPResponseCode int
-	ResponseMessage  string
+	ResponseMessage  interface{}
 	Data             []byte
 }
 

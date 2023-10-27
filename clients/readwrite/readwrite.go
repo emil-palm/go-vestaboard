@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -28,24 +27,40 @@ func (u *UnixTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-
 type messageResponse struct {
-	Status string `json:"status"`
-	ID string `json:"id"`
+	Status  string `json:"status"`
+	ID      string `json:"id"`
 	Created UnixTime
 }
 
 type Client struct {
 	baseURL string
+	client  *http.Client
 }
 
 func NewClient() *Client {
+	return NewClientWithHTTPClient(clients.NewHTTPClient())
+}
+
+func NewClientWithHTTPClient(client *http.Client) *Client {
 	return &Client{
 		baseURL: "https://rw.vestaboard.com",
+		client:  client,
 	}
 }
 
-func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout layout.Layout) (*http.Request, error) {
+func (c *Client) do(req *http.Request) (*clients.Response, error) {
+	httpResponse, err := c.client.Do(req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.parseResponse(httpResponse)
+	return resp, err
+}
+
+func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout layout.Layout) (*clients.Response, error) {
 	var b bytes.Buffer
 	if err := json.NewEncoder(&b).Encode(layout); err != nil {
 		return nil, fmt.Errorf("failed to encode JSON: %w", err)
@@ -63,10 +78,10 @@ func (c *Client) SendMessage(ctx context.Context, board clients.Board, layout la
 		return nil, err
 	}
 
-	return req, nil
+	return c.do(req)
 }
 
-func (c *Client) SendText(ctx context.Context, board clients.Board, text string) (*http.Request, error) {
+func (c *Client) SendText(ctx context.Context, board clients.Board, text string) (*clients.Response, error) {
 	text = strings.ToUpper(text)
 	if err := layout.ValidText(text, true); err != nil {
 		return nil, fmt.Errorf("invalid message: %w", err)
@@ -81,7 +96,6 @@ func (c *Client) SendText(ctx context.Context, board clients.Board, text string)
 		return nil, fmt.Errorf("failed to encode JSON: %w", err)
 	}
 
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, &b)
 	if err != nil {
 		return nil, err
@@ -94,25 +108,25 @@ func (c *Client) SendText(ctx context.Context, board clients.Board, text string)
 		return nil, err
 	}
 
-	return req, nil
+	return c.do(req)
 }
 
-func (c *Client) ParseResponse(httpResp *http.Response) (*clients.Response, error) {
+func (c *Client) parseResponse(httpResp *http.Response) (*clients.Response, error) {
 	resp, err := clients.NewResponse(*httpResp)
-
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	var parsedResponse messageResponse
-	
 
 	if err := json.Unmarshal(resp.Data, &parsedResponse); err != nil {
-		return nil, err
+		return resp, err
 	}
 
+	resp.ResponseMessage = parsedResponse
+
 	if resp.HTTPResponseCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.HTTPResponseCode)
+		return resp, fmt.Errorf("unexpected status code: %d", resp.HTTPResponseCode)
 	}
 
 	return resp, nil
