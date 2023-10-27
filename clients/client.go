@@ -10,7 +10,7 @@ type Response struct {
 }
 
 type Board interface {
-	Apply(http.Request) http.Request
+	Apply(*http.Request) error
 	String() string
 }
 

@@ -10,35 +10,28 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
-
-package vestaboard
+// limitations under the License.package installables
 
 import (
 	"context"
 	"net/http"
 )
 
-const viewerPath = "/viewer"
+const subscriptionsPath = "/subscriptions"
 
-type Installable struct {
-	ID string `json:"_id"`
-}
-
-type Installation struct {
-	ID          string `json:"_id"`
-	Installable `json:"installable"`
-}
-
-type ViewerResponse struct {
-	Type         string `json:"type"`
+type Subscription struct {
 	ID           string `json:"_id"`
 	Created      string `json:"_created"`
 	Installation `json:"installation"`
+	Boards       []Board `json:"boards"`
 }
 
-func (c *Client) Viewer(ctx context.Context) (*ViewerResponse, error) {
-	url := c.baseURL + viewerPath
+type SubscriptionsResponse struct {
+	Subscriptions []Subscription `json:"subscriptions"`
+}
+
+func (c *Client) Subscriptions(ctx context.Context) (*SubscriptionsResponse, error) {
+	url := c.baseURL + subscriptionsPath
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -47,7 +40,7 @@ func (c *Client) Viewer(ctx context.Context) (*ViewerResponse, error) {
 	req.Header.Set(APIKeyHeader, c.apiKey)
 	req.Header.Set(APIKeySecret, c.apiSecret)
 
-	var response ViewerResponse
+	var response SubscriptionsResponse
 	_, err = c.do(req, &response)
 	if err != nil {
 		return nil, err
