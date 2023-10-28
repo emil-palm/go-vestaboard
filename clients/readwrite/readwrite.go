@@ -10,10 +10,15 @@ import (
 	"strings"
 
 	"github.com/mikehelmick/go-vestaboard/v2/clients"
+	"github.com/mikehelmick/go-vestaboard/v2/clients/errors"
 	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 
 const MaxBodySize = 2_000_000
+
+var (
+	NonOKStatusError = fmt.Errorf("Non-OK status code")
+)
 
 type Client struct {
 	baseURL string
@@ -93,16 +98,15 @@ func (c *Client) SendText(ctx context.Context, board clients.Board, text string)
 	return c.do(req)
 }
 
-func (c *Client) parseResponse(httpResp *http.Response) (*Response, error) {
-	resp := clients.NewResponse(*httpResp)
-	parsedResponse := Response{
-		"",
-		"",
-		UnixTime{},
-		*resp,
+func (c *Client) parseResponse(resp *http.Response) (*Response, error) {
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.NewStatusError(resp.StatusCode, NonOKStatusError)
 	}
 
-	data := io.LimitReader(httpResp.Body, MaxBodySize)
+	var parsedResponse Response
+
+	data := io.LimitReader(resp.Body, MaxBodySize)
 	body, err := io.ReadAll(data)
 
 	if err != nil {
@@ -111,10 +115,6 @@ func (c *Client) parseResponse(httpResp *http.Response) (*Response, error) {
 
 	if err := json.Unmarshal(body, &parsedResponse); err != nil {
 		return &parsedResponse, err
-	}
-
-	if resp.HTTPResponseStatusCode != http.StatusOK {
-		return &parsedResponse, fmt.Errorf("unexpected status code: %d", resp.HTTPResponseStatusCode)
 	}
 
 	return &parsedResponse, nil

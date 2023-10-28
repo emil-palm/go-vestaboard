@@ -16,7 +16,9 @@ package installables
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 const subscriptionsPath = "/subscriptions"
@@ -41,22 +43,34 @@ type Subscription struct {
 	Boards       []Board `json:"boards"`
 }
 
-func (c *Client) Subscriptions(ctx context.Context) ([]Subscription, error) {
+func (s *Subscription) Apply(req *http.Request) error {
+	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, s.ID)
+	return nil
+}
+
+func (s *Subscription) String() string {
+	boards := make([]string, len(s.Boards))
+	for idx, board := range s.Boards {
+		boards[idx] = board.ID
+	}
+	return fmt.Sprintf("[Subscription] %s - [%s]", s.ID, strings.Join(boards, ","))
+}
+
+func (c *Client) Subscriptions(ctx context.Context) ([]*Subscription, error) {
 	url := c.baseURL + subscriptionsPath
 
-	req, err := c.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var response struct {
-		Subscriptions []Subscription `json:"subscriptions"`
-	}
+	var response struct{ Subscriptions []*Subscription }
 
 	_, err = c.do(req, &response)
 	if err != nil {
 		return nil, err
 	}
-	return &response, nil
+
+	return response.Subscriptions, nil
 }

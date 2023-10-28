@@ -1,17 +1,19 @@
 package clients
 
-import (
-	"net/http"
-)
+import "fmt"
 
-type Response struct {
-	HTTPResponseStatusCode int
+type APIError struct {
+	StatusCode int
+	Err        error
 }
 
-func NewResponse(resp http.Response) *Response {
-	r := Response{
-		HTTPResponseStatusCode: resp.StatusCode,
-	}
+func (ae *APIError) Error() string {
+	return fmt.Sprintf("%d: %s", ae.StatusCode, ae.Err)
+}
 
-	return &r
+func WrapAPIError(err error, statusCode int) *APIError {
+	return &APIError{
+		StatusCode: statusCode,
+		Err:        err,
+	}
 }

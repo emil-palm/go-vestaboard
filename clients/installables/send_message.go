@@ -18,15 +18,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/mikehelmick/go-vestaboard/v2/clients"
+	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 
 var (
-	ErrMessageTruncated  = errors.New("message truncated")
-	ErrInvalidCoordinate = errors.New("invalid coordinate")
+	ErrMessageTruncated  = fmt.Errorf("message truncated")
+	ErrInvalidCoordinate = fmt.Errorf("invalid coordinate")
 )
 
 type TextMessage struct {
@@ -34,7 +36,7 @@ type TextMessage struct {
 }
 
 type LayoutMessage struct {
-	Layout Layout `json:"characters"`
+	Layout layout.Layout `json:"characters"`
 }
 
 type Message struct {
@@ -47,7 +49,7 @@ type MessageResponse struct {
 	Message `json:"message"`
 }
 
-func (c *Client) SendMessage(ctx context.Context, subscriptionID string, l Layout) (*MessageResponse, error) {
+func (c *Client) SendMessage(ctx context.Context, subscription clients.Board, l layout.Layout) (*MessageResponse, error) {
 	var b bytes.Buffer
 	body := &LayoutMessage{
 		Layout: l,
@@ -56,31 +58,30 @@ func (c *Client) SendMessage(ctx context.Context, subscriptionID string, l Layou
 		return nil, fmt.Errorf("failed to encode JSON: %w", err)
 	}
 
-	url := fmt.Sprintf("%s%s/%s/message", c.baseURL, subscriptionsPath, subscriptionID)
+	// We create a URL without the subscriptionid
+	// pass that request to Subscription.Apply() which will alter that path
+	// Then we append the action we want /message
+
+	url := fmt.Sprintf("%s%s", c.baseURL, subscriptionsPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set(APIKeyHeader, c.apiKey)
-	req.Header.Set(APIKeySecret, c.apiSecret)
+
+	req.URL.Path = fmt.Sprintf("%s/message", req.URL.Path)
 
 	var response MessageResponse
-	resp, err := c.do(req, &response)
+	_, err = c.do(req, &response)
 	if err != nil {
 		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return &response, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	return &response, nil
 }
 
-func (c *Client) SendText(ctx context.Context, subscriptionID string, text string) (*MessageResponse, error) {
+func (c *Client) SendText(ctx context.Context, subscription clients.Board, text string) (*MessageResponse, error) {
 	text = strings.ToUpper(text)
-	if err := ValidText(text, true); err != nil {
+	if err := layout.ValidText(text, true); err != nil {
 		return nil, fmt.Errorf("invalid message: %w", err)
 	}
 
@@ -92,23 +93,26 @@ func (c *Client) SendText(ctx context.Context, subscriptionID string, text strin
 		return nil, fmt.Errorf("failed to encode JSON: %w", err)
 	}
 
-	url := fmt.Sprintf("%s%s/%s/message", c.baseURL, subscriptionsPath, subscriptionID)
+	// We create a URL without the subscriptionid
+	// pass that request to Subscription.Apply() which will alter that path
+	// Then we append the action we want /message
+
+	url := fmt.Sprintf("%s%s", c.baseURL, subscriptionsPath)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &b)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set(APIKeyHeader, c.apiKey)
-	req.Header.Set(APIKeySecret, c.apiSecret)
-
-	var response MessageResponse
-	resp, err := c.do(req, &response)
+	err = subscription.Apply(req)
 	if err != nil {
 		return nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return &response, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	req.URL.Path = fmt.Sprintf("%s/message", req.URL.Path)
+
+	var response MessageResponse
+	_, err = c.do(req, &response)
+	if err != nil {
+		return nil, err
 	}
 
 	return &response, nil

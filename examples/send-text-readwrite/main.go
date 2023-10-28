@@ -18,9 +18,11 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/mikehelmick/go-vestaboard/v2/clients/errors"
-	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+	client "github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
 	"github.com/mikehelmick/go-vestaboard/v2/internal/config"
 )
 
@@ -36,23 +38,32 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := client.New(c.APIKey, c.Secret)
-	subs, err := client.Subscriptions(ctx)
+	board := client.NewBoard("example", c.Secret)
 
-	if err != nil {
-		log.Fatalf("error calling Viewer: %v", err)
-	}
-	log.Printf("result: %+v", subs)
+	client := client.New()
+RESEND:
+	resp, err := client.SendText(ctx, board, *textFlag)
 
-	msg, err := client.SendText(ctx, subs[0], *textFlag)
 	if err != nil {
 		switch err.(type) {
-		case errors.NoChangeError:
-			break
+		case errors.StatusError:
+			switch err.(errors.StatusError).StatusCode {
+			case http.StatusServiceUnavailable:
+				time.Sleep(time.Second * 10)
+				goto RESEND
+			case http.StatusNotModified:
+				log.Print("Board is already that")
+				break
+
+			default:
+				log.Fatal(err)
+			}
+
 		default:
-			log.Fatalf("error sending message: %v", err)
+			log.Fatal(err)
 		}
+
 	} else {
-		log.Print(msg)
+		log.Printf("result: %+v", resp)
 	}
 }

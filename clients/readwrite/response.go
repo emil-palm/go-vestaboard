@@ -3,8 +3,6 @@ package readwrite
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/mikehelmick/go-vestaboard/v2/clients"
 )
 
 type UnixTime struct {
@@ -25,6 +23,4 @@ type Response struct {
 	Status  string   `json:"status"`
 	ID      string   `json:"id"`
 	Created UnixTime `json:"created"`
-
-	clients.Response
 }
