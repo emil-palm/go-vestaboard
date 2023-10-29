@@ -67,7 +67,10 @@ func (c *Client) SendMessage(ctx context.Context, subscription clients.Board, l 
 	if err != nil {
 		return nil, err
 	}
-
+	err = subscription.Apply(req)
+	if err != nil {
+		return nil, err
+	}
 	req.URL.Path = fmt.Sprintf("%s/message", req.URL.Path)
 
 	var response MessageResponse
