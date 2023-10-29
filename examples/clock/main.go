@@ -20,7 +20,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/mikehelmick/go-vestaboard"
+	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+
 	"github.com/mikehelmick/go-vestaboard/internal/config"
 )
 
@@ -34,7 +35,7 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := vestaboard.New(c.APIKey, c.Secret)
+	client := client.New(c.APIKey, c.Secret)
 
 	subs, err := client.Subscriptions(ctx)
 	if err != nil {
@@ -45,7 +46,7 @@ func main() {
 	for {
 		t := time.Now()
 		display := t.Format(time.RFC1123)
-		_, err := client.SendText(ctx, subs.Subscriptions[0].ID, display)
+		_, err := client.SendText(ctx, subs[0], display)
 		if err != nil {
 			log.Fatalf("error sending message: %v", err)
 		}
