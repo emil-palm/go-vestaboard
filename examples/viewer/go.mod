@@ -1,4 +1,4 @@
-module github.com/mikehelmick/go-vestaboard/v2/examples/clock
+module github.com/mikehelmick/go-vestaboard/v2/examples/viewer
 
 go 1.16
 

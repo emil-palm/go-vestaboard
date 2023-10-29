@@ -1,4 +1,4 @@
-module github.com/mikehelmick/go-vestaboard/v2/examples/clock
+module github.com/mikehelmick/go-vestaboard/v2/examples/send-text-readwrite
 
 go 1.16
 
