@@ -41,7 +41,7 @@ func main() {
 
 	board := localboard.NewBoard("example", c.Secret)
 
-	client := api.NewClient("http://vestaboard.local:7000/")
+	client := api.NewClient("http://vestaboard.local:8000/")
 RESEND:
 	resp, err := client.SendText(ctx, board, *textFlag)
 
