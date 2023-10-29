@@ -22,7 +22,7 @@ import (
 
 	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
 
-	"github.com/mikehelmick/go-vestaboard/internal/config"
+	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 )
 
 // Write the current time, every 15s.

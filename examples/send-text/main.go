@@ -21,7 +21,7 @@ import (
 
 	"github.com/mikehelmick/go-vestaboard/v2/clients/errors"
 	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
-	"github.com/mikehelmick/go-vestaboard/v2/internal/config"
+	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 )
 
 var textFlag = flag.String("text", "HELLO, WORLD!", "text to send")

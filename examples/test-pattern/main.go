@@ -19,8 +19,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard/internal/config"
 	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 

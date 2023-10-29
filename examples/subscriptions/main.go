@@ -18,8 +18,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard/internal/config"
 	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 )
 
 // Logs the result of the 'Subscriptions' API method.
