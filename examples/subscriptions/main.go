@@ -18,8 +18,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard"
 	"github.com/mikehelmick/go-vestaboard/internal/config"
+	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
 )
 
 // Logs the result of the 'Subscriptions' API method.
@@ -30,7 +30,7 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := vestaboard.New(c.APIKey, c.Secret)
+	client := client.New(c.APIKey, c.Secret)
 
 	subs, err := client.Subscriptions(ctx)
 	if err != nil {

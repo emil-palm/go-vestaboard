@@ -19,8 +19,9 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard"
 	"github.com/mikehelmick/go-vestaboard/internal/config"
+	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+	"github.com/mikehelmick/go-vestaboard/v2/layout"
 )
 
 // Writes out a test-pattern of characters and colors.
@@ -33,7 +34,7 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := vestaboard.New(c.APIKey, c.Secret)
+	client := client.New(c.APIKey, c.Secret)
 
 	subs, err := client.Subscriptions(ctx)
 	if err != nil {
@@ -41,26 +42,26 @@ func main() {
 	}
 	log.Printf("result: %+v", subs)
 
-	l := vestaboard.NewLayout()
+	l := layout.NewLayout()
 	l.Print(0, 0, " ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$()-+&=;:'\"%,./?°")
-	l.SetColor(2, 14, vestaboard.PoppyRed)
-	l.SetColor(2, 15, vestaboard.Orange)
-	l.SetColor(2, 16, vestaboard.Yellow)
-	l.SetColor(2, 17, vestaboard.Green)
-	l.SetColor(2, 18, vestaboard.ParisBlue)
-	l.SetColor(2, 19, vestaboard.Violet)
-	l.SetColor(2, 20, vestaboard.White)
+	l.SetColor(2, 14, layout.PoppyRed)
+	l.SetColor(2, 15, layout.Orange)
+	l.SetColor(2, 16, layout.Yellow)
+	l.SetColor(2, 17, layout.Green)
+	l.SetColor(2, 18, layout.ParisBlue)
+	l.SetColor(2, 19, layout.Violet)
+	l.SetColor(2, 20, layout.White)
 
-	l.SetColor(3, 1, vestaboard.PoppyRed)
-	l.SetColor(3, 2, vestaboard.Orange)
-	l.SetColor(3, 3, vestaboard.Yellow)
-	l.SetColor(3, 4, vestaboard.Green)
-	l.SetColor(3, 5, vestaboard.ParisBlue)
-	l.SetColor(3, 6, vestaboard.Violet)
-	l.SetColor(3, 7, vestaboard.White)
+	l.SetColor(3, 1, layout.PoppyRed)
+	l.SetColor(3, 2, layout.Orange)
+	l.SetColor(3, 3, layout.Yellow)
+	l.SetColor(3, 4, layout.Green)
+	l.SetColor(3, 5, layout.ParisBlue)
+	l.SetColor(3, 6, layout.Violet)
+	l.SetColor(3, 7, layout.White)
 	l.Print(3, 9, " ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$()-+&=;:'\"%,./?°")
 
-	msg, err := client.SendMessage(ctx, subs.Subscriptions[0].ID, l)
+	msg, err := client.SendMessage(ctx, subs[0], l)
 	if err != nil {
 		log.Fatalf("error sending message: %v", err)
 	}

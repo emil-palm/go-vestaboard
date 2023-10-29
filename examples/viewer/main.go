@@ -18,8 +18,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard"
 	"github.com/mikehelmick/go-vestaboard/internal/config"
+	vestaboard "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
 )
 
 // Logs the results of the 'Viewer' API method.
