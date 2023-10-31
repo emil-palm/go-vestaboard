@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mikehelmick/go-vestaboard/v2/clients/errors"
-	client "github.com/mikehelmick/go-vestaboard/v2/clients/readwrite"
+	"github.com/mikehelmick/go-vestaboard/v2/client/api/readwrite"
+	"github.com/mikehelmick/go-vestaboard/v2/client/errors"
 	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 )
 
@@ -37,12 +37,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
-
-	board := client.NewBoard("example", c.Secret)
-
-	client := client.New()
+	_ = c
+	board := readwrite.NewBoard("M2FkMjU0MTQtZDQ0ZS00MmFjLTlmNTQtYTRhNmQ5MzI5Mzhi")
 RESEND:
-	resp, err := client.SendText(ctx, board, *textFlag)
+	resp, err := board.SendText(ctx, *textFlag)
 
 	if err != nil {
 		switch err.(type) {

@@ -7,33 +7,52 @@ An unofficial client for the Vestaboard API in go.
 
 # Usage
 
-## Create a new client
+## Diferent types of clients.
+### Readwrite Client
+This client is meant if you are just targeting 1 Vestaboard with your application.
 
 ```
-client := vestaboard.New(c.APIKey, c.Secret)
+import github.com/mikehelmick/go-vestabord/v2/clients/api
+import github.com/mikehelmick/go-vestaboard/clients/readwrite
+client := api.NewClient()
+board := readwrite.NewBoard("My first board", "YOUR_READWRITE_API_TOKEN")
+client.SendText(context.Background(), board, "Hello world")
 ```
 
-From there, use the client methods
+### Installable Client
+This client is meant if you are producing a installable application in the vestaboard ecosystem.
+The 
+```
+import github.com/mikehelmick/go-vestaboard/clients/installables
+client := installables.NewClient("YOUR_API_KEY","YOUR_API_SECRET")
 
-* `Viewer` to get the information from the connected viewer
-* `Subscriptions` to get the subscription information
-* `SendText` to post a message with the default formatting
+subscriptions,err := client.Subscriptions(context.Background())
+
+client.SendText(context.Background(), subscriptions[0], "Hello world")
+```
+
+### Local Client
+This client is meant if you are using the local send method. This requires additional steps
+
+```
+import github.com/mikehelmick/go-vestabord/v2/clients/api
+import github.com/mikehelmick/go-vestaboard/clients/localboard
+client := localboard.NewClient("http://vestaboard.local:7000")
+board := localboard.NewBoard("My first board", "YOUR_LOCAL_API_TOKEN")
+client.SendText(context.Background(), board, "Hello world")
+```
 
 # Examples
 
-There are a nice set of demos in cmd/
-To use these, set your API Key and Secret as environment variables.
-```
-export APIKEY=YOUR_API_KEY_GOES_HERE
-export SECRET=YOUR_SECRET_GOES_HERE
-```
-
-Then just run the 'main.go' in whichever directory:
-```
-go run cmd/send-text/main.go
-```
-
 ## Send Text
+
+Does what it says - writes 'Hello World' to your vestaboard.
+
+## Send Text Local
+
+Does what it says - writes 'Hello World' to your vestaboard.
+
+## Send Text Readwrite
 
 Does what it says - writes 'Hello World' to your vestaboard.
 

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package installables
+package subscription
 
+/*
 import (
 	"bytes"
 	"context"
@@ -120,3 +121,4 @@ func (c *Client) SendText(ctx context.Context, subscription clients.Board, text 
 
 	return &response, nil
 }
+*/

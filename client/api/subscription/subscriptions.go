@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.package installables
 
-package installables
+package subscription
 
 import (
-	"context"
 	"fmt"
 	"net/http"
-	"strings"
-)
 
-const subscriptionsPath = "/subscriptions"
+	"github.com/mikehelmick/go-vestaboard/v2/client"
+)
 
 type Board struct {
 	ID string `json:"_id"`
@@ -43,34 +41,7 @@ type Subscription struct {
 	Boards       []Board `json:"boards"`
 }
 
-func (s *Subscription) Apply(req *http.Request) error {
+func (s *Subscription) Apply(rt client.RequestType, req *http.Request) error {
 	req.URL.Path = fmt.Sprintf("%s/%s", req.URL.Path, s.ID)
 	return nil
-}
-
-func (s *Subscription) String() string {
-	boards := make([]string, len(s.Boards))
-	for idx, board := range s.Boards {
-		boards[idx] = board.ID
-	}
-	return fmt.Sprintf("[Subscription] %s - [%s]", s.ID, strings.Join(boards, ","))
-}
-
-func (c *Client) Subscriptions(ctx context.Context) ([]*Subscription, error) {
-	url := c.baseURL + subscriptionsPath
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var response struct{ Subscriptions []*Subscription }
-
-	_, err = c.do(req, &response)
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Subscriptions, nil
 }

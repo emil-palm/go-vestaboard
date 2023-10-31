@@ -19,8 +19,8 @@ import (
 	"flag"
 	"log"
 
-	"github.com/mikehelmick/go-vestaboard/v2/clients/errors"
-	client "github.com/mikehelmick/go-vestaboard/v2/clients/installables"
+	"github.com/mikehelmick/go-vestaboard/v2/client/api/subscription"
+	"github.com/mikehelmick/go-vestaboard/v2/client/errors"
 	"github.com/mikehelmick/go-vestaboard/v2/examples/internal/config"
 )
 
@@ -36,12 +36,9 @@ func main() {
 		log.Fatalf("error loading config: %v", err)
 	}
 
-	client := client.New(c.APIKey, c.Secret)
+	client := subscription.NewClient(c.APIKey, c.Secret)
 	subs, err := client.Subscriptions(ctx)
 
-	if err != nil {
-		log.Fatalf("error calling Viewer: %v", err)
-	}
 	log.Printf("result: %+v", subs)
 
 	msg, err := client.SendText(ctx, subs[0], *textFlag)

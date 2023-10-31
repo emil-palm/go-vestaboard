@@ -1,4 +1,4 @@
-package v2
+package api
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func (u *UnixTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type Response struct {
+type MessageResponse struct {
 	Status  string   `json:"status"`
 	ID      string   `json:"id"`
 	Created UnixTime `json:"created"`
